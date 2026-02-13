@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meri Pyaari si Khushu ❤️</title>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0b0b10;
+      color: #f3f3f6;
+      overflow-x: hidden;
+      overflow-y: hidden;
+    }
+
+    /* Floating hearts background */
+    .hearts-container {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .heart {
+      position: absolute;
+      font-size: 20px;
+      opacity: 0;
+      animation: float-up 8s ease-in infinite;
+    }
+
+    @keyframes float-up {
+      0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+      10% { opacity: 0.6; }
+      90% { opacity: 0.3; }
+      100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+    }
+
+    /* Main container */
+    .container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    /* Story card - one at a time */
+    .story-card {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.6s ease;
+      padding: 18px;
+    }
+
+    .story-card.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .story-content {
+      max-width: 900px;
+      width: min(900px, 94vw);
+      background: linear-gradient(135deg, rgba(20, 20, 34, 0.95), rgba(15, 15, 24, 0.95));
+      border: 1px solid rgba(255, 77, 141, 0.3);
+      border-radius: 30px;
+      padding: 34px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(20px);
+      transform: scale(0.95);
+      transition: transform 0.3s ease;
+    }
+
+    .story-card.active .story-content {
+      transform: scale(1);
+      animation: slideIn 0.6s ease-out;
+    }
+
+    @keyframes slideIn {
+      from { transform: scale(0.9) translateY(30px); opacity: 0; }
+      to { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    /* Media container (no forced aspect ratio) */
+    .media-container {
+      width: 100%;
+      border-radius: 20px;
+      overflow: hidden;
+      background: #0f0f18;
+      margin-bottom: 22px;
+      border: 1px solid rgba(255,255,255,0.10);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Media element: show entire image/video (no cropping) */
+    .media-el {
+      width: 100%;
+      height: auto;
+      max-height: 62vh;
+      object-fit: contain;
+      display: block;
+      background: #0f0f18;
+    }
+
+    /* Caption area */
+    .caption-area { text-align: center; }
+
+    .chapter {
+      color: #ff4d8d;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 15px;
+      opacity: 0;
+      animation: fadeInUp 0.6s ease-out 0.25s forwards;
+    }
+
+    .caption {
+      font-size: 22px;
+      line-height: 1.5;
+      margin-bottom: 6px;
+      opacity: 0;
+      animation: fadeInUp 0.6s ease-out 0.4s forwards;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Navigation controls */
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      margin-top: 22px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 14px 30px;
+      border: none;
+      border-radius: 15px;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      min-width: 170px;
+    }
+
+    .btn-next {
+      background: linear-gradient(135deg, #ff4d8d, #ff6ba3);
+      color: #140610;
+      box-shadow: 0 4px 20px rgba(255, 77, 141, 0.4);
+    }
+
+    .btn-next:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 30px rgba(255, 77, 141, 0.6);
+    }
+
+    .btn-prev {
+      background: rgba(255, 255, 255, 0.1);
+      color: #f3f3f6;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-prev:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .btn:active { transform: scale(0.95); }
+
+    /* Progress bar */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      z-index: 100;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ff4d8d, #ff6ba3);
+      transition: width 0.5s ease;
+      box-shadow: 0 0 10px rgba(255, 77, 141, 0.6);
+      width: 0%;
+    }
+
+    /* Counter */
+    .counter {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(20, 20, 34, 0.8);
+      backdrop-filter: blur(10px);
+      padding: 10px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      color: #b9b9c7;
+      z-index: 50;
+      border: 1px solid rgba(255, 77, 141, 0.2);
+    }
+
+    .counter span { color: #ff4d8d; font-weight: 700; }
+
+    /* Welcome screen */
+    .welcome-screen {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(135deg, #0b0b10, #1a1a2e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+    }
+
+    .welcome-screen.hidden { opacity: 0; visibility: hidden; }
+
+    .welcome-content { text-align: center; padding: 40px; }
+
+    .welcome-content h1 {
+      font-size: 48px;
+      margin-bottom: 18px;
+      background: linear-gradient(135deg, #ff4d8d, #ff6ba3);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: glow 2s ease-in-out infinite;
+    }
+
+    @keyframes glow {
+      0%, 100% { filter: drop-shadow(0 0 10px rgba(255, 77, 141, 0.4)); }
+      50% { filter: drop-shadow(0 0 20px rgba(255, 77, 141, 0.8)); }
+    }
+
+    .welcome-content p {
+      font-size: 20px;
+      color: #b9b9c7;
+      margin-bottom: 36px;
+    }
+
+    .btn-start {
+      padding: 18px 40px;
+      background: linear-gradient(135deg, #ff4d8d, #ff6ba3);
+      color: #140610;
+      border: none;
+      border-radius: 15px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 30px rgba(255, 77, 141, 0.5);
+      transition: all 0.3s ease;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .btn-start:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 40px rgba(255, 77, 141, 0.7);
+    }
+
+    .pulse { animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    /* Final card */
+    .final-card .story-content {
+      background: linear-gradient(135deg, rgba(255, 77, 141, 0.15), rgba(138, 43, 226, 0.15));
+      border: 2px solid rgba(255, 77, 141, 0.5);
+      text-align: center;
+    }
+
+    .reveal-question {
+      display: none;
+      font-size: 32px;
+      color: #ff4d8d;
+      margin-top: 18px;
+      animation: fadeInUp 0.6s ease-out forwards;
+      font-weight: 800;
+    }
+    .reveal-question.show { display: block; }
+
+    .final-choices {
+      display: none;
+      margin-top: 14px;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .final-choices.show { display: flex; }
+
+    .btn-yes {
+      background: linear-gradient(135deg, #ff4d8d, #ff6ba3);
+      color: #140610;
+      box-shadow: 0 4px 20px rgba(255, 77, 141, 0.35);
+      border: none;
+    }
+
+    .btn-think {
+      background: rgba(255, 255, 255, 0.10);
+      color: #f3f3f6;
+      border: 1px solid rgba(255, 255, 255, 0.20);
+    }
+
+    .yes-message {
+      display: none;
+      margin-top: 14px;
+      font-size: 18px;
+      color: #f3f3f6;
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    .kiss-pop {
+      display: none;
+      font-size: 56px;
+      margin-right: 10px;
+      vertical-align: -10px;
+      filter: drop-shadow(0 10px 18px rgba(255, 77, 141, 0.35));
+    }
+
+    .kiss-anim { animation: kissPop 0.8s cubic-bezier(.2,.8,.2,1) forwards; }
+    @keyframes kissPop {
+      0% { transform: scale(0.2) translateY(10px); opacity: 0; }
+      60% { transform: scale(1.25) translateY(-6px); opacity: 1; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    /* Sparkles */
+    .sparkle {
+      position: fixed;
+      pointer-events: none;
+      font-size: 20px;
+      animation: sparkleFloat 1.5s ease-out forwards;
+      z-index: 1000;
+    }
+    @keyframes sparkleFloat {
+      0% { transform: translateY(0) scale(0); opacity: 1; }
+      100% { transform: translateY(-100px) scale(1); opacity: 0; }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .story-content { padding: 26px 18px; }
+      .welcome-content h1 { font-size: 36px; }
+      .caption { font-size: 18px; }
+      .controls { flex-direction: column; gap: 10px; }
+      .btn { width: 100%; min-width: unset; }
+      .counter { top: 12px; right: 12px; }
+      .media-el { max-height: 54vh; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="hearts-container" id="heartsContainer"></div>
+
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="counter"><span id="currentSlide">0</span> / <span id="totalSlides">0</span></div>
+
+  <div class="welcome-screen" id="welcomeScreen">
+    <div class="welcome-content">
+      <h1>Meri Pyaari si Khushu ❤️</h1>
+      <p>This is for You</p>
+      <button class="btn-start" id="startBtn">Begin Our Story ✨</button>
+    </div>
+  </div>
+
+  <div class="container" id="storyRoot"></div>
+
+  <script>
+    const slides = [
+      { type:'image', src:'assets/blaze-first-photo.jpg', chapter:'How it started',
+        caption:'Blaze Pizza. Our first photo… and the day everything quietly changed. (Including our first kiss.)' },
+
+      { type:'image', src:'assets/spaghetti-first-date-him.jpg', chapter:'First date energy',
+        caption:"Me on our first date… trying to act normal, failing, and falling for you anyway." },
+
+      { type:'image', src:'assets/spaghetti-her-wide.jpg', chapter:'First dates era',
+        caption:"My favorite part of Old Spaghetti Factory wasn’t the pasta. It was you, looking at me like that." },
+
+      { type:'image', src:'assets/spaghetti-her-close.jpg', chapter:'A core memory',
+        caption:'Those eyes. The kind that turn an ordinary dinner into a core memory.' },
+
+      { type:'image', src:'assets/home-candlelight-photo.jpg', chapter:'First Candle Light Dinner',
+        caption:'One of the best wholesome and cozy dates with the lovely lady.' },
+
+      { type:'video', src:'assets/Video 2.mp4', chapter:'The real show',
+        caption:'Netflix can wait. The real show is you being happy.' },
+
+      { type:'image', src:'assets/home-pasta-plates.jpg', chapter:'Home dinner vibes',
+        caption:"Chef’s special: pasta, garlic bread… and your ‘I know I look cute’ face." },
+
+      { type:'image', src:'assets/cozy-cuddle-close.jpg', chapter:'Closeness',
+        caption:'This is the kind of closeness I cherish the most. Quiet, soft, and completely us.' },
+
+      { type:'image', src:'assets/home-bed-cozy.jpg', chapter:'Peace',
+        caption:'Proof that peace looks like this: two sleepy idiots, sharing one blanket.' },
+
+      { type:'image', src:'assets/goofy-candid.jpg', chapter:'Pretty much sums up Us',
+        caption:'You being adorable chaos, me pretending I’m not obsessed.' },
+
+      { type:'video', src:'assets/Video 1.mp4', chapter:'Chaos',
+        caption:"Me trying to match your craziness like it’s a full-time job." },
+
+      { type:'image', src:'assets/meme-energy.jpg', chapter:'Accurate',
+        caption:'Accurate: you at 200% energy, me pretending I’m chill while I’m actually obsessed.' },
+
+      { type:'image', src:'assets/remote-plate.jpg', chapter:'Caught in the wild',
+        caption:'Look at me browsing what to watch, and end up watching you anyway.' },
+
+      { type:'image', src:'assets/couch-food-grin.jpg', chapter:'Comfy & pretty',
+        caption:'My favorite kind of pretty: comfy, messy, mid-bite, fully you.' },
+
+      { type:'image', src:'assets/door-messy-bun.jpg', chapter:'A very honest moment',
+        caption:'This is how you’d find me… innocently begging you to do a messy bun.' },
+
+      { type:'image', src:'assets/lego-roses.jpg', chapter:'Little gestures',
+        caption:'Flowers that don’t wilt, for the girl who somehow makes everything bloom anyway.' },
+
+      { type:'video', src:'assets/Video 3.mp4', chapter:'Inside jokes',
+        caption:'Your nose: confused. My humor: unfiltered. Our day: perfect.' },
+
+      { type:'image', src:'assets/modita-outside.jpg', chapter:'Latest date night',
+        caption:'Dressed up, cozy breeze, one drink, a hundred jokes… and a memory as sweet as mango lassi cake.' },
+
+      { type:'image', src:'assets/modita-her-white.jpg', chapter:'Glow',
+        caption:'Even in candlelight, and with a pretty drink… and you're glowing like the whole restaurant was built for you to shine.' },
+
+      { type:'image', src:'assets/facetime.jpg', chapter:'Distance',
+        caption:'Even when we’re miles apart, somehow you still end up being my favorite part of the day.' },
+
+      { type:'final' }
+    ];
+
+    let currentSlide = 0;
+    let welcomeShown = false;
+
+    const storyRoot = document.getElementById('storyRoot');
+    const progressFill = document.getElementById('progressFill');
+    const currentSlideEl = document.getElementById('currentSlide');
+    const totalSlidesEl = document.getElementById('totalSlides');
+    totalSlidesEl.textContent = String(slides.length);
+
+    function buildSlides(){
+      storyRoot.innerHTML = '';
+
+      slides.forEach((s, idx) => {
+        const slideNum = idx + 1;
+
+        const card = document.createElement('div');
+        card.className = 'story-card' + (s.type === 'final' ? ' final-card' : '');
+        card.dataset.slide = String(slideNum);
+
+        const content = document.createElement('div');
+        content.className = 'story-content';
+
+        if (s.type !== 'final'){
+          const mediaWrap = document.createElement('div');
+          mediaWrap.className = 'media-container';
+
+          if (s.type === 'image'){
+            const img = document.createElement('img');
+            img.className = 'media-el';
+            img.alt = s.chapter || 'Memory';
+            img.loading = 'lazy';
+            img.src = s.src;
+            mediaWrap.appendChild(img);
+          } else {
+            const vid = document.createElement('video');
+            vid.className = 'media-el';
+            vid.controls = true;
+            vid.preload = 'metadata';
+            vid.playsInline = true;
+            vid.src = s.src;
+            mediaWrap.appendChild(vid);
+          }
+
+          content.appendChild(mediaWrap);
+
+          const captionArea = document.createElement('div');
+          captionArea.className = 'caption-area';
+
+          const chapter = document.createElement('div');
+          chapter.className = 'chapter';
+          chapter.textContent = s.chapter || '';
+
+          const caption = document.createElement('p');
+          caption.className = 'caption';
+          caption.textContent = s.caption;
+
+          captionArea.appendChild(chapter);
+          captionArea.appendChild(caption);
+
+          const controls = document.createElement('div');
+          controls.className = 'controls';
+
+          if (slideNum > 1){
+            const prev = document.createElement('button');
+            prev.className = 'btn btn-prev';
+            prev.textContent = '← Back';
+            prev.addEventListener('click', prevSlide);
+            controls.appendChild(prev);
+          }
+
+          const next = document.createElement('button');
+          next.className = 'btn btn-next';
+          next.textContent = 'Next Memory →';
+          next.addEventListener('click', nextSlide);
+          controls.appendChild(next);
+
+          captionArea.appendChild(controls);
+          content.appendChild(captionArea);
+
+        } else {
+          // FINAL CARD (updated with your heartfelt message)
+          const h = document.createElement('h1');
+          h.style.fontSize = '30px';
+          h.style.marginBottom = '14px';
+          h.style.textAlign = 'center';
+          h.textContent = "Every memory here has one thing in common: YOU.";
+
+          const p = document.createElement('p');
+          p.className = 'caption';
+          p.style.fontSize = '18px';
+          p.style.marginBottom = '0';
+          p.style.whiteSpace = 'pre-line';
+          p.textContent =
+            "You’re my favorite person.\n" +
+            "My favorite comfort.\n" +
+            "My favorite chaos.\n" +
+            "You make ordinary days feel like something I want to keep forever.\n" +
+            "Even from miles away, you still calm me down, make me laugh, and feel loved.\n" +
+            "I miss you more than I admit….\n\n" +
+            "So I just have one tiny thing to ask you… 💌";
+
+          const btn = document.createElement('button');
+          btn.className = 'btn btn-next';
+          btn.style.marginTop = '18px';
+          btn.textContent = 'Tap for the question 💌';
+          btn.addEventListener('click', revealQuestion);
+
+          const q = document.createElement('div');
+          q.className = 'reveal-question';
+          q.id = 'finalQuestion';
+          q.textContent = 'Will you be my Valentine? ❤️';
+
+          const choices = document.createElement('div');
+          choices.className = 'final-choices';
+          choices.id = 'finalChoices';
+
+          const yesBtn = document.createElement('button');
+          yesBtn.className = 'btn btn-yes';
+          yesBtn.textContent = 'Yes';
+          yesBtn.addEventListener('click', chooseYes);
+
+          const thinkBtn = document.createElement('button');
+          thinkBtn.className = 'btn btn-think';
+          thinkBtn.textContent = 'Think twice and look at the 1st option again';
+          thinkBtn.addEventListener('click', chooseThinkTwice);
+
+          choices.appendChild(yesBtn);
+          choices.appendChild(thinkBtn);
+
+          const yesMsg = document.createElement('div');
+          yesMsg.className = 'yes-message';
+          yesMsg.id = 'yesMsg';
+          yesMsg.innerHTML = `<span class="kiss-pop" id="kissPop">😘</span>I can't wait to give this kiss to you in person soon.`;
+
+          const controls = document.createElement('div');
+          controls.className = 'controls';
+
+          const backBtn = document.createElement('button');
+          backBtn.className = 'btn btn-prev';
+          backBtn.id = 'finalBackBtn';
+          backBtn.textContent = '← Back';
+          backBtn.addEventListener('click', prevSlide);
+          controls.appendChild(backBtn);
+
+          content.appendChild(h);
+          content.appendChild(p);
+          content.appendChild(btn);
+          content.appendChild(q);
+          content.appendChild(choices);
+          content.appendChild(yesMsg);
+          content.appendChild(controls);
+        }
+
+        card.appendChild(content);
+        storyRoot.appendChild(card);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      buildSlides();
+      createFloatingHearts();
+      updateProgress();
+      document.querySelectorAll('.story-card').forEach(card => card.classList.remove('active'));
+    });
+
+    document.getElementById('startBtn').addEventListener('click', () => {
+      document.getElementById('welcomeScreen').classList.add('hidden');
+      welcomeShown = true;
+      setTimeout(() => {
+        currentSlide = 1;
+        showSlide(currentSlide);
+        updateProgress();
+      }, 600);
+      createSparkles(window.innerWidth / 2, window.innerHeight / 2);
+    });
+
+    function showSlide(n){
+      // Pause any playing videos when switching slides
+      document.querySelectorAll('video').forEach(v => { try { v.pause(); } catch {} });
+
+      document.querySelectorAll('.story-card').forEach(card => card.classList.remove('active'));
+      const el = document.querySelector(`[data-slide="${n}"]`);
+      if (el) el.classList.add('active');
+    }
+
+    function nextSlide(){
+      if (!welcomeShown) return;
+      if (currentSlide >= slides.length) return;
+      currentSlide++;
+      showSlide(currentSlide);
+      updateProgress();
+      createSparkles(window.innerWidth / 2, window.innerHeight / 2);
+    }
+
+    function prevSlide(){
+      if (!welcomeShown) return;
+      if (currentSlide <= 1) return;
+      currentSlide--;
+      showSlide(currentSlide);
+      updateProgress();
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (!welcomeShown) return;
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+
+    // Swipe navigation
+    let touchStartX = 0, touchEndX = 0;
+    document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, { passive:true });
+    document.addEventListener('touchend', e => { touchEndX = e.changedTouches[0].screenX; handleSwipe(); }, { passive:true });
+
+    function handleSwipe(){
+      if (!welcomeShown) return;
+      if (touchEndX < touchStartX - 50) nextSlide();
+      if (touchEndX > touchStartX + 50) prevSlide();
+    }
+
+    function updateProgress(){
+      const progress = (currentSlide / slides.length) * 100;
+      progressFill.style.width = progress + '%';
+      currentSlideEl.textContent = String(currentSlide);
+    }
+
+    function revealQuestion(e){
+      const q = document.getElementById('finalQuestion');
+      const choices = document.getElementById('finalChoices');
+      if (!q || !choices) return;
+
+      q.classList.add('show');
+      choices.classList.add('show');
+
+      if (e?.target) e.target.style.display = 'none';
+      createSparkles(window.innerWidth / 2, window.innerHeight / 2, 20);
+      if (window.navigator?.vibrate) window.navigator.vibrate([100,50,100,50,100]);
+    }
+
+    function chooseYes(){
+      const yesMsg = document.getElementById('yesMsg');
+      const kiss = document.getElementById('kissPop');
+      const choices = document.getElementById('finalChoices');
+      const backBtn = document.getElementById('finalBackBtn');
+      if (!yesMsg || !kiss || !choices) return;
+
+      choices.style.display = 'none';
+      yesMsg.style.display = 'block';
+      kiss.style.display = 'inline-block';
+      kiss.classList.add('kiss-anim');
+
+      // Change CTA to “watch again” and restart
+      if (backBtn){
+        const freshBtn = backBtn.cloneNode(true);
+        freshBtn.textContent = 'Replay our love story? 🥰';
+        freshBtn.className = 'btn btn-next';
+        freshBtn.addEventListener('click', restartStory);
+        backBtn.parentNode.replaceChild(freshBtn, backBtn);
+      }
+
+      createSparkles(window.innerWidth / 2, window.innerHeight / 2, 26);
+      if (window.navigator?.vibrate) window.navigator.vibrate([80,40,80]);
+      setTimeout(() => kiss.classList.remove('kiss-anim'), 900);
+    }
+
+    function chooseThinkTwice(){
+      createSparkles(window.innerWidth / 2, window.innerHeight / 2, 10);
+      if (window.navigator?.vibrate) window.navigator.vibrate(50);
+    }
+
+    function restartStory(){
+      // Pause + rewind videos
+      document.querySelectorAll('video').forEach(v => {
+        try { v.pause(); v.currentTime = 0; } catch {}
+      });
+
+      // Reset final UI
+      const q = document.getElementById('finalQuestion');
+      const choices = document.getElementById('finalChoices');
+      const yesMsg = document.getElementById('yesMsg');
+      const kiss = document.getElementById('kissPop');
+      if (q) q.classList.remove('show');
+      if (choices) { choices.classList.remove('show'); choices.style.display = ''; }
+      if (yesMsg) yesMsg.style.display = 'none';
+      if (kiss) kiss.style.display = 'none';
+
+      // Restore the “Tap for the question 💌” button (it was hidden)
+      const finalCard = document.querySelector('.final-card .story-content');
+      if (finalCard){
+        const btn = Array.from(finalCard.querySelectorAll('button'))
+          .find(b => b.textContent.includes('Tap for the question'));
+        if (btn) btn.style.display = '';
+      }
+
+      // Back to welcome screen
+      welcomeShown = false;
+      currentSlide = 0;
+      updateProgress();
+      document.querySelectorAll('.story-card').forEach(card => card.classList.remove('active'));
+      document.getElementById('welcomeScreen').classList.remove('hidden');
+
+      createSparkles(window.innerWidth / 2, window.innerHeight / 2, 12);
+    }
+
+    function createFloatingHearts(){
+      const container = document.getElementById('heartsContainer');
+      setInterval(() => {
+        const heart = document.createElement('div');
+        heart.className = 'heart';
+        heart.textContent = '❤️';
+        heart.style.left = Math.random() * 100 + '%';
+        heart.style.animationDelay = Math.random() * 2 + 's';
+        heart.style.fontSize = (Math.random() * 10 + 15) + 'px';
+        container.appendChild(heart);
+        setTimeout(() => heart.remove(), 8000);
+      }, 2800);
+    }
+
+    function createSparkles(x, y, count = 10){
+      const sparkles = ['✨','💫','⭐','💖','💕'];
+      for (let i = 0; i < count; i++){
+        const sparkle = document.createElement('div');
+        sparkle.className = 'sparkle';
+        sparkle.textContent = sparkles[Math.floor(Math.random() * sparkles.length)];
+        sparkle.style.left = x + (Math.random() - 0.5) * 100 + 'px';
+        sparkle.style.top = y + (Math.random() - 0.5) * 100 + 'px';
+        document.body.appendChild(sparkle);
+        setTimeout(() => sparkle.remove(), 1500);
+      }
+    }
+  </script>
+</body>
+</html>
