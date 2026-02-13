@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Meri Pyaari si Chinnu Paapa ❤️</title>
-<base href="/valentine-site/">
+  <base href="/valentine-site/">
+
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -100,6 +101,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 8px;
     }
 
     /* Media element: show entire image/video (no cropping) */
@@ -110,6 +112,7 @@
       object-fit: contain;
       display: block;
       background: #0f0f18;
+      border-radius: 14px;
     }
 
     /* Caption area */
@@ -184,6 +187,12 @@
     }
 
     .btn:active { transform: scale(0.95); }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
 
     /* Progress bar */
     .progress-bar {
@@ -290,6 +299,14 @@
       text-align: center;
     }
 
+    .final-message {
+      font-size: 18px;
+      line-height: 1.6;
+      color: #f3f3f6;
+      white-space: pre-line;
+      margin-top: 10px;
+    }
+
     .reveal-question {
       display: none;
       font-size: 32px;
@@ -381,13 +398,14 @@
     <div class="welcome-content">
       <h1>Meri Pyaari si Chinnu Paapa ❤️</h1>
       <p>This is for You</p>
-      <button class="btn-start" id="startBtn">Begin Our Story ✨</button>
+      <button class="btn-start" id="startBtn" type="button">Begin Our Story ✨</button>
     </div>
   </div>
 
   <div class="container" id="storyRoot"></div>
 
   <script>
+    // --- Slides (keep paths relative to <base>) ---
     const slides = [
       { type:'image', src:'assets/blaze-first-photo.jpg', chapter:'How it started',
         caption:'Blaze Pizza. Our first photo… and the day everything quietly changed. (Including our first kiss.)' },
@@ -444,7 +462,7 @@
         caption:'Dressed up, cozy breeze, one drink, a hundred jokes… and a memory as sweet as mango lassi cake.' },
 
       { type:'image', src:'assets/modita-her-white.jpg', chapter:'Glow',
-        caption:'Even in candlelight, and with a pretty drink… and you're glowing like the whole restaurant was built for you to shine.' },
+        caption:"Even in candlelight, with a pretty drink… you're glowing like the whole restaurant was built for you to shine." },
 
       { type:'image', src:'assets/facetime.jpg', chapter:'Distance',
         caption:'Even when we’re miles apart, somehow you still end up being my favorite part of the day.' },
@@ -506,7 +524,7 @@
 
           const caption = document.createElement('p');
           caption.className = 'caption';
-          caption.textContent = s.caption;
+          caption.textContent = s.caption || '';
 
           captionArea.appendChild(chapter);
           captionArea.appendChild(caption);
@@ -516,6 +534,7 @@
 
           if (slideNum > 1){
             const prev = document.createElement('button');
+            prev.type = 'button';
             prev.className = 'btn btn-prev';
             prev.textContent = '← Back';
             prev.addEventListener('click', prevSlide);
@@ -523,8 +542,9 @@
           }
 
           const next = document.createElement('button');
+          next.type = 'button';
           next.className = 'btn btn-next';
-          next.textContent = 'Next Memory →';
+          next.textContent = (slideNum === slides.length - 1) ? 'Final Note →' : 'Next Memory →';
           next.addEventListener('click', nextSlide);
           controls.appendChild(next);
 
@@ -532,19 +552,14 @@
           content.appendChild(captionArea);
 
         } else {
-          // FINAL CARD (updated with your heartfelt message)
           const h = document.createElement('h1');
           h.style.fontSize = '30px';
-          h.style.marginBottom = '14px';
-          h.style.textAlign = 'center';
+          h.style.marginBottom = '10px';
           h.textContent = "Every memory here has one thing in common: YOU.";
 
-          const p = document.createElement('p');
-          p.className = 'caption';
-          p.style.fontSize = '18px';
-          p.style.marginBottom = '0';
-          p.style.whiteSpace = 'pre-line';
-          p.textContent =
+          const msg = document.createElement('div');
+          msg.className = 'final-message';
+          msg.textContent =
             "You’re my favorite person.\n" +
             "My favorite comfort.\n" +
             "My favorite chaos.\n" +
@@ -554,8 +569,9 @@
             "So I just have one tiny thing to ask you… 💌";
 
           const btn = document.createElement('button');
+          btn.type = 'button';
           btn.className = 'btn btn-next';
-          btn.style.marginTop = '18px';
+          btn.style.marginTop = '16px';
           btn.textContent = 'Tap for the question 💌';
           btn.addEventListener('click', revealQuestion);
 
@@ -569,11 +585,13 @@
           choices.id = 'finalChoices';
 
           const yesBtn = document.createElement('button');
+          yesBtn.type = 'button';
           yesBtn.className = 'btn btn-yes';
           yesBtn.textContent = 'Yes';
           yesBtn.addEventListener('click', chooseYes);
 
           const thinkBtn = document.createElement('button');
+          thinkBtn.type = 'button';
           thinkBtn.className = 'btn btn-think';
           thinkBtn.textContent = 'Think twice and look at the 1st option again';
           thinkBtn.addEventListener('click', chooseThinkTwice);
@@ -590,6 +608,7 @@
           controls.className = 'controls';
 
           const backBtn = document.createElement('button');
+          backBtn.type = 'button';
           backBtn.className = 'btn btn-prev';
           backBtn.id = 'finalBackBtn';
           backBtn.textContent = '← Back';
@@ -597,7 +616,7 @@
           controls.appendChild(backBtn);
 
           content.appendChild(h);
-          content.appendChild(p);
+          content.appendChild(msg);
           content.appendChild(btn);
           content.appendChild(q);
           content.appendChild(choices);
@@ -610,22 +629,33 @@
       });
     }
 
+    // --- Init ---
     document.addEventListener('DOMContentLoaded', () => {
       buildSlides();
       createFloatingHearts();
       updateProgress();
       document.querySelectorAll('.story-card').forEach(card => card.classList.remove('active'));
+
+      // Useful debug: if anything breaks, it will tell you
+      window.addEventListener('error', (e) => {
+        console.error('Script error:', e.message, e.filename, e.lineno);
+      });
     });
 
+    // --- Start button ---
     document.getElementById('startBtn').addEventListener('click', () => {
-      document.getElementById('welcomeScreen').classList.add('hidden');
+      const ws = document.getElementById('welcomeScreen');
+      ws.classList.add('hidden');
+
       welcomeShown = true;
+
       setTimeout(() => {
         currentSlide = 1;
         showSlide(currentSlide);
         updateProgress();
-      }, 600);
-      createSparkles(window.innerWidth / 2, window.innerHeight / 2);
+      }, 650);
+
+      createSparkles(window.innerWidth / 2, window.innerHeight / 2, 12);
     });
 
     function showSlide(n){
@@ -640,15 +670,17 @@
     function nextSlide(){
       if (!welcomeShown) return;
       if (currentSlide >= slides.length) return;
+
       currentSlide++;
       showSlide(currentSlide);
       updateProgress();
-      createSparkles(window.innerWidth / 2, window.innerHeight / 2);
+      createSparkles(window.innerWidth / 2, window.innerHeight / 2, 10);
     }
 
     function prevSlide(){
       if (!welcomeShown) return;
       if (currentSlide <= 1) return;
+
       currentSlide--;
       showSlide(currentSlide);
       updateProgress();
@@ -703,10 +735,10 @@
       kiss.style.display = 'inline-block';
       kiss.classList.add('kiss-anim');
 
-      // Change CTA to “watch again” and restart
       if (backBtn){
         const freshBtn = backBtn.cloneNode(true);
-        freshBtn.textContent = 'Replay our love story? 🥰';
+        freshBtn.type = 'button';
+        freshBtn.textContent = 'One more time, my favorite person? 💞';
         freshBtn.className = 'btn btn-next';
         freshBtn.addEventListener('click', restartStory);
         backBtn.parentNode.replaceChild(freshBtn, backBtn);
@@ -767,7 +799,7 @@
         heart.style.fontSize = (Math.random() * 10 + 15) + 'px';
         container.appendChild(heart);
         setTimeout(() => heart.remove(), 8000);
-      }, 2800);
+      }, 1800);
     }
 
     function createSparkles(x, y, count = 10){
@@ -776,8 +808,8 @@
         const sparkle = document.createElement('div');
         sparkle.className = 'sparkle';
         sparkle.textContent = sparkles[Math.floor(Math.random() * sparkles.length)];
-        sparkle.style.left = x + (Math.random() - 0.5) * 100 + 'px';
-        sparkle.style.top = y + (Math.random() - 0.5) * 100 + 'px';
+        sparkle.style.left = x + (Math.random() - 0.5) * 140 + 'px';
+        sparkle.style.top = y + (Math.random() - 0.5) * 140 + 'px';
         document.body.appendChild(sparkle);
         setTimeout(() => sparkle.remove(), 1500);
       }
